@@ -1,8 +1,6 @@
 # MNIST Training Pipeline - Usage Guide
 
-
-https://github.com/user-attachments/assets/9753ec1a-37d9-499c-a635-0306bec319e9
-
+![Mnist_Demo](https://github.com/user-attachments/assets/63e035b0-ba9c-4cdc-9283-3a660d55d0e7)
 
 ## Summary
 
