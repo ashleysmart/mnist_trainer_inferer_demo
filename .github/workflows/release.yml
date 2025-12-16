@@ -127,6 +127,7 @@ jobs:
   # === JOB: TRAIN MODEL ===
   train-tar-and-upload:
     needs:
+      - find-version-tag
       - apply-release-tags
 
     runs-on: ubuntu-latest
@@ -169,6 +170,7 @@ jobs:
       - name: 🚀 Upload tarball to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: ${{ needs.find-version-tag.outputs.version_tag }}
           files: ${{ steps.create-tar.outputs.archive_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
