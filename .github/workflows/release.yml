@@ -61,7 +61,7 @@ jobs:
 
   # === JOB: DETERMINE VERSION ===
   find-version-tag:
-    needs: train-model
+    needs: run_tests
     runs-on: ubuntu-latest
     permissions:
       contents: read
