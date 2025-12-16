@@ -1,0 +1,187 @@
+name: CI/CD - Test
+
+env:
+  IMAGE_NAME:
+  REGISTRY: ghcr.io
+
+on:
+  push:
+    branches:
+      - main # Trigger on push to the main branch
+
+jobs:
+  # === JOB: LINT CHECK ===
+  lint_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' # Ensure consistent Python version across jobs
+
+      - name: Install dependencies (requirements.txt + Ruff)
+        run: |
+          python -m pip install --upgrade pip
+          # Install project dependencies
+          pip install -r requirements.txt
+          # Ensure ruff is installed if not in requirements.txt
+          pip install ruff
+
+      - name: Run Ruff Lint Check
+        # This job will fail the entire workflow if linting errors are found.
+        run: ruff check --output-format=github .
+
+  # === JOB: RUN TESTS ===
+  run_tests:
+    needs: lint_check
+    runs-on: ubuntu-latest
+
+    outputs:
+      test_summary: ${{ steps.summarize-tests.outputs.summary }}
+
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
+
+      # Setup needed to run local tests against the container
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: 📦 Install dependencies for testing
+        # Install the same test dependencies needed to run the test script
+        run: pip install -r requirements.txt
+
+      # === Testing Section ===
+      - name: 🧪 Run Pytest
+        run: pytest
+
+  # === JOB: DETERMINE VERSION ===
+  find-version-tag:
+    needs: train-model
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    outputs:
+      # This output now holds the *next* version string (e.g., 'v1.0.1')
+      # We'll calculate this in the new step
+      version_tag: ${{ steps.calculate.outputs.version_tag }}
+
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 Retrieve Last Tagged Version (and default if none found)
+        id: last_tag
+        run: |
+          # Use the safe retrieval method (as discussed previously)
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo 'v0.0.0')
+          echo "Last found tag: $LAST_TAG"
+          echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
+
+      - name: 📈 Calculate Next Patch Version
+        id: calculate
+        run: |
+          # 1. Get the last tag from the previous step's output
+          # Note: We need to strip the 'v' prefix for numeric manipulation
+          LAST_VERSION="${{ steps.last_tag.outputs.last_tag }}"
+
+          # Remove 'v' prefix and replace dots with spaces for easy parsing with 'read'
+          SEMVER_PARTS=$(echo $LAST_VERSION | sed 's/^v//g' | tr '.' ' ')
+
+          # Read the parts into separate variables (MAJOR, MINOR, PATCH)
+          read MAJOR MINOR PATCH <<< "$SEMVER_PARTS"
+
+          # Increment the patch number
+          NEXT_PATCH=$((PATCH + 1))
+
+          # Reassemble the new version string
+          # Example: v1.2.3 -> v1.2.4
+          NEXT_VERSION="v$MAJOR.$MINOR.$NEXT_PATCH"
+
+          # Output the result
+          echo "Next calculated version: $NEXT_VERSION"
+          echo "version_tag=$NEXT_VERSION" >> $GITHUB_OUTPUT
+
+  # === JOB 4: APPLY VERSION TAGS (NEW: Only runs AFTER approval) ===
+  apply-release-tags:
+    needs:
+      - find-version-tag
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Needed for Git tagging
+
+      - name: 🔑 Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📢 Create Git Tag and GitHub Release
+        run: |
+          VERSION_TAG="${{ needs.find-version-tag.outputs.version_tag }}"
+
+          # Create the Git Tag
+          git tag $VERSION_TAG
+          git push origin $VERSION_TAG
+
+          # Create the GitHub Release using the existing tag (requires contents: write)
+          gh release create $VERSION_TAG \
+            --title "Release $VERSION_TAG" \
+            --notes "Deployment of commit ${{ github.sha }}. Image available at tag $VERSION_TAG."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # === JOB: TRAIN MODEL ===
+  train-tar-and-upload:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed for uploading assets
+
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔑 Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📦 Install dependencies for training
+        run: pip install -r requirements.txt
+
+      - name: 📦 Train Model (Produces output in mnist_cnn_model directory)
+        run: python3 main.py --output-dir mnist_cnn_model
+
+      - name: 🔄 Tar the output directory
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+          ARCHIVE_NAME="mnist_cnn_model_${VERSION}.tar.gz"
+          tar czvf $ARCHIVE_NAME mnist_cnn_model/
+          echo "archive_name=$ARCHIVE_NAME" >> $GITHUB_OUTPUT
+        id: create-tar
+
+      - name: 🚀 Upload tarball to GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ steps.create-tar.outputs.archive_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
