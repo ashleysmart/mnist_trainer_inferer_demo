@@ -1,5 +1,9 @@
 # MNIST Training Pipeline - Usage Guide
 
+
+https://github.com/user-attachments/assets/9753ec1a-37d9-499c-a635-0306bec319e9
+
+
 ## Summary
 
 The MNIST training pipeline
