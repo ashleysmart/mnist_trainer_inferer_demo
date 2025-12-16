@@ -1,4 +1,4 @@
-name: CI/CD - Test
+name: CI/CD - lint, test and release
 
 env:
   IMAGE_NAME:
