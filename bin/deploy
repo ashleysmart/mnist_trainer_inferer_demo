@@ -1,0 +1,4 @@
+export ONNX_MODEL_FILE=$*
+cp ${ONNX_MODEL_FILE} deploy
+cd deploy
+docker compose build woven_mnist_infer
