@@ -19,8 +19,8 @@ def load_config_from_env():
     # generate defaults from environment variables
     config = {
         # Model/Data settings
-        'model_id':   os.getenv('MODEL_ID', 'mnist_cnn_v0'),
-        'dataset_id': os.getenv('DATASET_ID', 'mnist_data_v0'),
+        'model_id':   os.getenv('MODEL_ID', 'mnist_cnn_v1'),
+        'dataset_id': os.getenv('DATASET_ID', 'mnist_v1'),
 
         # Directory settings
         'data_dir':      os.getenv('DATA_DIR', './data'),
@@ -28,10 +28,10 @@ def load_config_from_env():
         'export_format': os.getenv('EXPORT_FORMAT', 'all'),
 
         # Training hyperparameters
-        'criterion_id': os.getenv('CRITERION_ID', 'nnl'),
+        'criterion_id': os.getenv('CRITERION_ID', 'nll'),
         'optimizer_id': os.getenv('OPTIMIZER_ID', 'adam'),
 
-        'seed':          int(os.getenv('SEED')),
+        'seed':          os.getenv('SEED'),
         'epochs':        int(os.getenv('EPOCHS', '5')),
         'batch_size':    int(os.getenv('BATCH_SIZE', '64')),
         'learning_rate': float(os.getenv('LEARNING_RATE', '0.001')),

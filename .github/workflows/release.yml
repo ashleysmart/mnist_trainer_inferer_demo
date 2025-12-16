@@ -10,24 +10,25 @@ on:
       - main # Trigger on push to the main branch
 
 jobs:
-  # === JOB: LINT CHECK ===
+  # === JOB: LINT AND TESTS CHECK ===
   lint_and_test_check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: 📦 Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11' # Ensure consistent Python version across jobs
           cache: 'pip' # This enables built-in pip caching
 
-      - name: Install dependencies (requirements.txt + Ruff)
+      - name: 📦 Install dependencies (requirements.txt + Ruff)
         run: |
           pip install -r requirements.txt
           pip install ruff pytest
 
-      - name: Run Ruff Lint Check
+      - name: 🧪 Run Ruff Lint Check
         # This job will fail the entire workflow if linting errors are found.
         run: ruff check --output-format=github .
 
@@ -138,7 +139,7 @@ jobs:
         uses: actions/checkout@v4
 
       # Setup needed to run local tests against the container
-      - name: Set up Python
+      - name: 📦 Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11' # Ensure consistent Python version across jobs

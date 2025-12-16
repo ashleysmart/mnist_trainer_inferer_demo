@@ -30,7 +30,9 @@ class Pipeline:
         # Hyperparameters storage
         self.config = config
 
-        seed = config.get('seed', np.random.randint(1, 1000000))
+        seed = config.get('seed')
+        if not seed:
+            seed = np.random.randint(1, 1000000)
         torch.manual_seed(seed)
 
         logger.info(f"Using Seed: {seed}")

@@ -36,10 +36,10 @@ def test_end2end_mnsit_epoch1():
             "PIPELINE - TRAINING",
             "Epoch 1/1: Train Loss:",
             "PIPELINE - EVALULATION",
-            "RECOMMENDATION: O APPROVE FOR RELEASE",
+            "RECOMMENDATION:    -- APPROVE FOR RELEASE --",
             "PIPELINE - GENERATING REPORTS",
             "PIPELINE - SAVING",
-            "Releasable: APPROVED O",
+            "Releasable: -- APPROVED --",
         ]
         for entry in expected_log_items:
             assert entry in logs, \
@@ -92,10 +92,10 @@ def test_end2end_fashion_mnsit_epoch1():
             "PIPELINE - TRAINING",
             "Epoch 1/1: Train Loss:",
             "PIPELINE - EVALULATION",
-            "RECOMMENDATION: X DO NOT RELEASE",
+            "RECOMMENDATION:    xx DO NOT RELEASE xx",
             "PIPELINE - GENERATING REPORTS",
             "PIPELINE - SAVING",
-            "Releasable: REJECTED X",
+            "Releasable: xx REJECTED xx",
         ]
         for entry in expected_log_items:
             assert entry in logs, \
