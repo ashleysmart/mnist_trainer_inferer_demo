@@ -150,7 +150,11 @@ jobs:
 
   # === JOB: TRAIN MODEL ===
   train-tar-and-upload:
+    needs:
+      - apply-release-tags
+
     runs-on: ubuntu-latest
+
     permissions:
       contents: write # Needed for uploading assets
 
