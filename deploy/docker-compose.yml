@@ -1,7 +1,7 @@
 services:
-  woven_mnist_infer:
-    container_name: woven_mnist_infer
-    image: woven_mnist_infer
+  mnist_infer:
+    container_name: mnist_infer
+    image: mnist_infer
     build:
       context: .
       dockerfile: Dockerfile

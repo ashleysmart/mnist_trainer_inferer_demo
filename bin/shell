@@ -1,1 +1,1 @@
-docker compose -f docker/docker-compose.yml run --rm --remove-orphans woven_mnist
+docker compose -f docker/docker-compose.yml run --rm --remove-orphans mnist_trainer

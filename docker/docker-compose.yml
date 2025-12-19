@@ -1,7 +1,7 @@
 services:
-  woven_mnist:
-    container_name: woven_mnist
-    image: woven_mnist
+  mnist_trainer:
+    container_name: mnist_trainer
+    image: mnist_trainer
     build:
       context: ../
       dockerfile: docker/Dockerfile

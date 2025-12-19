@@ -1,1 +1,1 @@
-docker compose -f docker/docker-compose.yml build woven_mnist
+docker compose -f docker/docker-compose.yml build mnist_trainer
